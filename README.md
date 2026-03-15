@@ -1,4 +1,4 @@
-# Laundry-telegram-bot
+# LaundryMachineBot
 
 Telegram-бот для автоматизации записи в прачечную общежития
 
