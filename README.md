@@ -39,3 +39,10 @@ git push -u origin feature/название-задачи
 ```
 
 ### 🔹 6. Создать Pull Request
+
+После отправки ветки:
+
+* зайти в репозиторий на GitHub
+* нажать **Compare & pull request**
+* проверить изменения
+* нажать **Create pull request**
