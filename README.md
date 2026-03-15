@@ -1,2 +1,2 @@
-# ID-26-9474-laundry-telegram-bot
+# Laundry-telegram-bot
 Telegram-бот для автоматизации записи в прачечную общежития
