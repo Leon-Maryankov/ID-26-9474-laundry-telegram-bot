@@ -1,0 +1,4 @@
+# token: "a7b996487c9e62fd6c60c1d7ab5b576d"
+token: "token"
+host: "localhost:8080"
+databasePath: "./auxiliary/database.db"
