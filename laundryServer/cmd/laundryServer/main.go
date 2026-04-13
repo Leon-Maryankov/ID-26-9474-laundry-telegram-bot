@@ -7,6 +7,7 @@ import (
 
 	"laundryServer/internal/config"
 	"laundryServer/internal/server"
+	"laundryServer/internal/slots"
 	"laundryServer/internal/users"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -35,6 +36,11 @@ func main() {
 		log.Fatalln("Failed to create users:", err)
 	}
 
-	server, _ := server.NewServer(config.Host, config.Token, users)
+	slots, err := slots.NewSlots(database)
+	if err != nil {
+		log.Fatalln("Failed to create slots:", err)
+	}
+
+	server, _ := server.NewServer(config.Host, config.Token, users, slots)
 	server.ListenAndServe()
 }

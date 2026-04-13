@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"laundryServer/internal/multiplexer"
+	"laundryServer/internal/slots"
 	"laundryServer/internal/users"
 )
 
@@ -11,11 +12,11 @@ type Server struct {
 	server *http.Server
 }
 
-func NewServer(host, token string, users *users.Users) (*Server, error) {
+func NewServer(host, token string, users *users.Users, slots *slots.Slots) (*Server, error) {
 	result := &Server{
 		server: &http.Server{
 			Addr: host,
-			Handler: multiplexer.NewMultiplexer(token, users),
+			Handler: multiplexer.NewMultiplexer(token, users, slots),
 		},
 	}
 
