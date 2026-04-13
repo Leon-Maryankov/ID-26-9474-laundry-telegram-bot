@@ -25,7 +25,7 @@ func NewUsers(database *sql.DB) (*Users, error) {
 			name TEXT NOT NULL,
 			surname TEXT NOT NULL,
 			email TEXT UNIQUE NOT NULL
-		)`,
+		);`,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("users.NewUsers: failed to initialize database: %w", err)
