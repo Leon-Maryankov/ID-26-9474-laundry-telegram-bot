@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  laundry-server:
+    build: ./laundryServer        
+    container_name: laundry-server
+    ports:
+      - "8080:8080"                
+    volumes:
+      - ./laundryServer/auxiliary:/app/auxiliary   
+    environment:
+      - CGO_ENABLED=1              

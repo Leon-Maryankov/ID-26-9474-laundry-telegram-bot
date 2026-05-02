@@ -1,6 +1,6 @@
 module laundryServer
 
-go 1.25.8
+go 1.24.0
 
 require (
 	github.com/go-playground/validator/v10 v10.30.1
