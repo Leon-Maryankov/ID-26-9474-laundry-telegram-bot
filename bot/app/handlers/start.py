@@ -10,7 +10,7 @@ async def cmd_start(message: types.Message):
     kb = InlineKeyboardMarkup(inline_keyboard=[[
         InlineKeyboardButton(
             text="🧺 Забронировать слот",
-            web_app=WebAppInfo(url="https://example.com")  # пока можно заглушку
+            web_app=WebAppInfo(url="https://polylaundry.netlify.app")  # пока можно заглушку
         )
     ]])
     await message.answer("Нажми кнопку ниже, чтобы выбрать время стирки 👇", reply_markup=kb)
