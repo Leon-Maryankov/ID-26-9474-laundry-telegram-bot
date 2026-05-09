@@ -2,7 +2,7 @@
 from aiogram import Router, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from app.command_registry import register_command
-from config import settings
+from app.config import settings
 
 router = Router()
 
