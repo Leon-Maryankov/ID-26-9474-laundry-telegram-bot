@@ -9,9 +9,9 @@ class APIClient:
     async def register_user(self, telegramID, first_name, last_name, email):
         async with aiohttp.ClientSession() as session:
             data = {
-                "telegramID": telegramID,
-                "first_name": first_name,
-                "last_name": last_name,
+                "telegramId": telegramID,
+                "name": first_name,
+                "surname": last_name,
                 "email": email
             }
             url = f"{self.base_url}/{self.api_token}/registerUser"
