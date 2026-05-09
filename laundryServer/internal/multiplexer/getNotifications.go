@@ -8,7 +8,7 @@ import (
 	"laundryServer/internal/users"
 )
 
-type getNotificationsRequest struct {}
+type getNotificationsRequest struct{}
 
 type getNotificationsRespond struct {
 	respond
@@ -16,7 +16,7 @@ type getNotificationsRespond struct {
 	Ids []int `json:"ids"`
 }
 
-func getNotificationsHandler(users *users.Users, slots*slots.Slots) http.HandlerFunc {
+func getNotificationsHandler(users *users.Users, slots *slots.Slots) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		userIds, err := slots.GetUsersForNotification()
 		if err != nil {

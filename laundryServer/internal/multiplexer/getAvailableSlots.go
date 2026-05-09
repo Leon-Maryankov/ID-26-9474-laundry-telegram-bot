@@ -7,7 +7,7 @@ import (
 	"laundryServer/internal/slots"
 )
 
-type getAvailableSlotsRequest struct {}
+type getAvailableSlotsRequest struct{}
 
 type getAvailableSlotsRespond struct {
 	respond

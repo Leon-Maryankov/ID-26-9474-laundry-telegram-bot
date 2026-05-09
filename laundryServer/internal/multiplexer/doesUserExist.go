@@ -14,8 +14,8 @@ type doesUserExistRequest struct {
 type doesUserExistRespond struct {
 	respond
 
-	Answer bool `json:"answer"`
-	User *users.User `json:"user,omitempty"`
+	Answer bool        `json:"answer"`
+	User   *users.User `json:"user,omitempty"`
 }
 
 func doesUserExistHandler(users *users.Users) http.HandlerFunc {
@@ -42,7 +42,7 @@ func doesUserExistHandler(users *users.Users) http.HandlerFunc {
 				Status: good,
 			},
 			Answer: user != nil,
-			User: user,
+			User:   user,
 		})
 
 		writeJSONResponse(writer, doesUserExistRespond, http.StatusOK)
