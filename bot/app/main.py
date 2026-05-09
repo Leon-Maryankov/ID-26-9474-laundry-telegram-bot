@@ -8,6 +8,8 @@ from app.config import settings
 from app.handlers import start
 from app.handlers import help
 from app.commands_setup import setup_bot_commands
+from app.handlers import mybookings
+from app.services.api_client import api_client
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -22,11 +24,23 @@ async def main():
     )
 
     await setup_bot_commands(bot)
+
+    try:
+        result = await api_client.register_user(
+            telegramID=123456779,
+            name="Test",
+            surname="User",
+            email="test2@edu.spbstu.ru"
+        )
+        print("✅ Ответ сервера:", result)
+    except Exception as e:
+        print(f"❌ Ошибка: {type(e).__name__}: {e}")
     
     dp = Dispatcher()
 
     dp.include_router(start.router)
     dp.include_router(help.router)
+    dp.include_router(mybookings.router)
 
     await bot.delete_webhook(drop_pending_updates=True)
     

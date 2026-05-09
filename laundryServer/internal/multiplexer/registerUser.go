@@ -8,10 +8,10 @@ import (
 )
 
 type registerUserRequest struct {
-	TelegramId int `json:"telegramId"`
-	Name string `json:"name"`
-	Surname string `json:"surname"`
-	Email string `json:"email"`
+	TelegramId int    `json:"telegramId"`
+	Name       string `json:"name"`
+	Surname    string `json:"surname"`
+	Email      string `json:"email"`
 }
 
 type registerUserRespond struct {
@@ -35,9 +35,9 @@ func registerUserHandler(userss *users.Users) http.HandlerFunc {
 
 		user := &users.User{
 			TelegramId: registerUserRequest.TelegramId,
-			Name: registerUserRequest.Name,
-			Surname: registerUserRequest.Surname,
-			Email: registerUserRequest.Email,
+			Name:       registerUserRequest.Name,
+			Surname:    registerUserRequest.Surname,
+			Email:      registerUserRequest.Email,
 		}
 
 		registerUserRespond, _ := json.Marshal(&registerUserRespond{
