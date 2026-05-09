@@ -30,9 +30,12 @@ async def main():
             telegramID=123456779
         )
         print("✅ Ответ сервера:", result)
+        print("✅ Существует ли пользователь?:", result.get('answer'))
     except Exception as e:
         print(f"❌ Ошибка: {type(e).__name__}: {e}")
     
+
+
     dp = Dispatcher()
 
     dp.include_router(start.router)
