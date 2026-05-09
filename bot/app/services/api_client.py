@@ -6,12 +6,12 @@ class APIClient:
         self.base_url = settings.GO_API_URL
         self.api_token = "token" 
 
-    async def register_user(self, telegramID, first_name, last_name, email):
+    async def register_user(self, telegramID, name, surname, email):
         async with aiohttp.ClientSession() as session:
             data = {
                 "telegramId": telegramID,
-                "name": first_name,
-                "surname": last_name,
+                "name": name,
+                "surname": surname,
                 "email": email
             }
             url = f"{self.base_url}/{self.api_token}/registerUser"
