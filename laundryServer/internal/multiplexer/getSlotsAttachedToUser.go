@@ -20,21 +20,19 @@ type getSlotsAttachedToUserRespond struct {
 func getSlotsAttachedToUserHandler(slots *slots.Slots) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		if request.Method != http.MethodPost {
-			writer.Write(incorrectRequestRespond)
+			writeJSONResponse(writer, incorrectRequestRespond, http.StatusMethodNotAllowed)
 			return
 		}
 
 		getSlotsAttachedToUserRequest := &getSlotsAttachedToUserRequest{}
 		if err := json.NewDecoder(request.Body).Decode(getSlotsAttachedToUserRequest); err != nil {
-			writer.Write(incorrectRequestRespond)
-
+			writeJSONResponse(writer, incorrectRequestRespond, http.StatusBadRequest)
 			return
 		}
 
 		slots, err := slots.GetSlotsAttachedToUser(getSlotsAttachedToUserRequest.UserId)
 		if err != nil {
-			writer.Write(incorrectRequestRespond)
-
+			writeJSONResponse(writer, incorrectRequestRespond, http.StatusInternalServerError)
 			return
 		}
 
@@ -45,6 +43,6 @@ func getSlotsAttachedToUserHandler(slots *slots.Slots) http.HandlerFunc {
 			Slots: slots,
 		})
 
-		writer.Write(getSlotsAttachedToUserRespond)
+		writeJSONResponse(writer, getSlotsAttachedToUserRespond, http.StatusOK)
 	}
 }

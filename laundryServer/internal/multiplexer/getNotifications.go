@@ -20,8 +20,7 @@ func getNotificationsHandler(users *users.Users, slots*slots.Slots) http.Handler
 	return func(writer http.ResponseWriter, request *http.Request) {
 		userIds, err := slots.GetUsersForNotification()
 		if err != nil {
-			writer.Write(incorrectRequestRespond)
-
+			writeJSONResponse(writer, incorrectRequestRespond, http.StatusInternalServerError)
 			return
 		}
 
@@ -29,7 +28,7 @@ func getNotificationsHandler(users *users.Users, slots*slots.Slots) http.Handler
 		for _, id := range userIds {
 			user, err := users.GetUserById(id)
 			if err != nil {
-				writer.Write(incorrectRequestRespond)
+				writeJSONResponse(writer, incorrectRequestRespond, http.StatusInternalServerError)
 				return
 			}
 
@@ -45,6 +44,6 @@ func getNotificationsHandler(users *users.Users, slots*slots.Slots) http.Handler
 			Ids: result,
 		})
 
-		writer.Write(responseBytes)
+		writeJSONResponse(writer, responseBytes, http.StatusOK)
 	}
 }

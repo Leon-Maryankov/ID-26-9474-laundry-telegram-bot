@@ -18,16 +18,6 @@ type registerUserRespond struct {
 	respond
 }
 
-// добавил обертку для установки заголовка, resp.json ожидает
-// json, а по дефолту ставился plane/text
-// поэтому в ручную ставил "application/json"
-
-func writeJSONResponse(writer http.ResponseWriter, data []byte, statusCode int) {
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(statusCode)
-	writer.Write(data)
-}
-
 func registerUserHandler(userss *users.Users) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		if request.Method != http.MethodPost {

@@ -16,7 +16,7 @@ type reason = string
 
 const (
 	tooManyWashingMachines reason = "too many washing machines"
-	tooManyDryerMachines reason = "too many dryer machines"
+	tooManyDryerMachines   reason = "too many dryer machines"
 )
 
 type occupySlotRespond struct {
@@ -28,15 +28,13 @@ type occupySlotRespond struct {
 func occupySlotHandler(slotss *slots.Slots) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		if request.Method != http.MethodPost {
-			writer.Write(incorrectRequestRespond)
-
+			writeJSONResponse(writer, incorrectRequestRespond, http.StatusMethodNotAllowed)
 			return
 		}
 
 		occupySlotRequest := &occupySlotRequest{}
 		if err := json.NewDecoder(request.Body).Decode(occupySlotRequest); err != nil {
-			writer.Write(incorrectRequestRespond)
-
+			writeJSONResponse(writer, incorrectRequestRespond, http.StatusBadRequest)
 			return
 		}
 
@@ -51,8 +49,7 @@ func occupySlotHandler(slotss *slots.Slots) http.HandlerFunc {
 					Reason: tooManyWashingMachines,
 				})
 
-				writer.Write(occupySlotRespond)
-
+				writeJSONResponse(writer, occupySlotRespond, http.StatusOK)
 				return
 
 			case slots.DryerLimit:
@@ -63,13 +60,11 @@ func occupySlotHandler(slotss *slots.Slots) http.HandlerFunc {
 					Reason: tooManyDryerMachines,
 				})
 
-				writer.Write(occupySlotRespond)
-
+				writeJSONResponse(writer, occupySlotRespond, http.StatusOK)
 				return
 
 			default:
-				writer.Write(incorrectRequestRespond)
-
+				writeJSONResponse(writer, incorrectRequestRespond, http.StatusInternalServerError)
 				return
 			}
 		}
@@ -80,6 +75,6 @@ func occupySlotHandler(slotss *slots.Slots) http.HandlerFunc {
 			},
 		})
 
-		writer.Write(occupySlotRespond)
+		writeJSONResponse(writer, occupySlotRespond, http.StatusOK)
 	}
 }

@@ -6,6 +6,12 @@ class APIClient:
         self.base_url = settings.GO_API_URL
         self.api_token = "token" 
 
+    async def check_user_exists(self, telegramID: int):
+        async with aiohttp.ClientSession() as session:
+            url = f"{self.base_url}/{self.api_token}/doesUserExist"
+            async with session.post(url, json={"telegramId": telegramID}) as resp:
+                return await resp.json()
+
     async def register_user(self, telegramID, name, surname, email):
         async with aiohttp.ClientSession() as session:
             data = {
@@ -17,6 +23,7 @@ class APIClient:
             url = f"{self.base_url}/{self.api_token}/registerUser"
             async with session.post(url, json=data) as resp:
                 return await resp.json()
+
 
     # Другие методы: get_slots, book, cancel, get_bookings
 

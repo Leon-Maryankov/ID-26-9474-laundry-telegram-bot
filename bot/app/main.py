@@ -23,14 +23,11 @@ async def main():
         default=DefaultBotProperties(parse_mode=ParseMode.HTML)
     )
 
-    await setup_bot_commands(bot)
+    await setup_bot_commands(bot) # регаем команды в BotFather
 
     try:
-        result = await api_client.register_user(
-            telegramID=123456779,
-            name="Test",
-            surname="User",
-            email="test2@edu.spbstu.ru"
+        result = await api_client.check_user_exists(
+            telegramID=123456779
         )
         print("✅ Ответ сервера:", result)
     except Exception as e:
