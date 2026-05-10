@@ -42,5 +42,6 @@ func main() {
 	}
 
 	server, _ := server.NewServer(config.Host, config.Token, users, slots)
+	log.Printf("Server started on http://localhost%s\n", config.Host)
 	server.ListenAndServe()
 }
