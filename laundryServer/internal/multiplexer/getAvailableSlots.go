@@ -7,7 +7,7 @@ import (
 	"laundryServer/internal/slots"
 )
 
-type getAvailableSlotsRequest struct {}
+type getAvailableSlotsRequest struct{}
 
 type getAvailableSlotsRespond struct {
 	respond
@@ -19,8 +19,7 @@ func getAvailableSlotsHandler(slots *slots.Slots) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		slots, err := slots.GetAvailableSlots()
 		if err != nil {
-			writer.Write(incorrectRequestRespond)
-
+			writeJSONResponse(writer, incorrectRequestRespond, http.StatusInternalServerError)
 			return
 		}
 
@@ -31,6 +30,6 @@ func getAvailableSlotsHandler(slots *slots.Slots) http.HandlerFunc {
 			Slots: slots,
 		})
 
-		writer.Write(getAvailableSlotsRespond)
+		writeJSONResponse(writer, getAvailableSlotsRespond, http.StatusOK)
 	}
 }

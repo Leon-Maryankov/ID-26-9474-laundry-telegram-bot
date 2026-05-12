@@ -8,10 +8,10 @@ import (
 )
 
 type registerUserRequest struct {
-	TelegramId int `json:"telegramId"`
-	Name string `json:"name"`
-	Surname string `json:"surname"`
-	Email string `json:"email"`
+	TelegramId int    `json:"telegramId"`
+	Name       string `json:"name"`
+	Surname    string `json:"surname"`
+	Email      string `json:"email"`
 }
 
 type registerUserRespond struct {
@@ -21,38 +21,32 @@ type registerUserRespond struct {
 func registerUserHandler(userss *users.Users) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		if request.Method != http.MethodPost {
-			writer.Write(incorrectRequestRespond)
-
+			writeJSONResponse(writer, incorrectRequestRespond, http.StatusMethodNotAllowed)
 			return
 		}
 
 		registerUserRequest := &registerUserRequest{}
 		if err := json.NewDecoder(request.Body).Decode(registerUserRequest); err != nil {
-			writer.Write(incorrectRequestRespond)
-
+			writeJSONResponse(writer, incorrectRequestRespond, http.StatusBadRequest)
 			return
 		}
 
 		user := &users.User{
 			TelegramId: registerUserRequest.TelegramId,
-			Name: registerUserRequest.Name,
-			Surname: registerUserRequest.Surname,
-			Email: registerUserRequest.Email,
+			Name:       registerUserRequest.Name,
+			Surname:    registerUserRequest.Surname,
+			Email:      registerUserRequest.Email,
 		}
 
-		registerUserRespond, _ := json.Marshal(&registerUserRespond{
-			respond{
-				Status: func() status {
-					err := userss.AddUser(user)
-					if err == nil {
-						return good
-					} else {
-						return bad
-					}
-				}(),
-			},
+		status := good
+		if err := userss.AddUser(user); err != nil {
+			status = bad
+		}
+
+		response, _ := json.Marshal(&registerUserRespond{
+			respond{Status: status},
 		})
 
-		writer.Write(registerUserRespond)
+		writeJSONResponse(writer, response, http.StatusOK)
 	}
 }

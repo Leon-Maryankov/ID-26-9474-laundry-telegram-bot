@@ -14,29 +14,26 @@ type doesUserExistRequest struct {
 type doesUserExistRespond struct {
 	respond
 
-	Answer bool `json:"answer"`
-	User *users.User `json:"user,omitempty"`
+	Answer bool        `json:"answer"`
+	User   *users.User `json:"user,omitempty"`
 }
 
 func doesUserExistHandler(users *users.Users) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		if request.Method != http.MethodPost {
-			writer.Write(incorrectRequestRespond)
-
+			writeJSONResponse(writer, incorrectRequestRespond, http.StatusMethodNotAllowed)
 			return
 		}
 
 		doesUserExistRequest := &doesUserExistRequest{}
 		if err := json.NewDecoder(request.Body).Decode(doesUserExistRequest); err != nil {
-			writer.Write(incorrectRequestRespond)
-
+			writeJSONResponse(writer, incorrectRequestRespond, http.StatusBadRequest)
 			return
 		}
 
 		user, err := users.GetUserByTelegramId(doesUserExistRequest.TelegramId)
 		if err != nil {
-			writer.Write(incorrectRequestRespond)
-
+			writeJSONResponse(writer, incorrectRequestRespond, http.StatusInternalServerError)
 			return
 		}
 
@@ -45,9 +42,9 @@ func doesUserExistHandler(users *users.Users) http.HandlerFunc {
 				Status: good,
 			},
 			Answer: user != nil,
-			User: user,
+			User:   user,
 		})
 
-		writer.Write(doesUserExistRespond)
+		writeJSONResponse(writer, doesUserExistRespond, http.StatusOK)
 	}
 }

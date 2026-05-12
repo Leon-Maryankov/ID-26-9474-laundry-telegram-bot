@@ -19,22 +19,19 @@ type cancelSlotRespond struct {
 func cancelSlotHandler(slots *slots.Slots) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		if request.Method != http.MethodPost {
-			writer.Write(incorrectRequestRespond)
-
+			writeJSONResponse(writer, incorrectRequestRespond, http.StatusMethodNotAllowed)
 			return
 		}
 
 		cancelSlotRequest := &cancelSlotRequest{}
 		if err := json.NewDecoder(request.Body).Decode(cancelSlotRequest); err != nil {
-			writer.Write(incorrectRequestRespond)
-
+			writeJSONResponse(writer, incorrectRequestRespond, http.StatusBadRequest)
 			return
 		}
 
 		err := slots.ReleaseSlot(cancelSlotRequest.SlotId, cancelSlotRequest.UserId)
 		if err != nil {
-			writer.Write(incorrectRequestRespond)
-
+			writeJSONResponse(writer, incorrectRequestRespond, http.StatusInternalServerError)
 			return
 		}
 
@@ -44,6 +41,6 @@ func cancelSlotHandler(slots *slots.Slots) http.HandlerFunc {
 			},
 		})
 
-		writer.Write(cancelSlotRespond)
+		writeJSONResponse(writer, cancelSlotRespond, http.StatusOK)
 	}
 }
