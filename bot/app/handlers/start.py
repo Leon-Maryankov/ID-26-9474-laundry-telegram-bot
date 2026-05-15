@@ -1,19 +1,21 @@
+import logging
 from aiogram import Router, F, types
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.filters import CommandStart
-from app.command_registry import register_command
 from app.config import settings
 from app.services.api_client import api_client
 
 router = Router()
+logger = logging.getLogger(__name__)
 
 class RegistrationStates(StatesGroup):
     waiting_for_email = State()
 
-# 🖼 Хелпер: показать кнопку WebApp
 async def show_webapp_button(message: types.Message):
+    """Отправляет кнопку для открытия WebApp"""
+    logger.info(f"Отправляем кнопку с URL: {settings.WEBAPP_URL}")
     kb = InlineKeyboardMarkup(inline_keyboard=[[
         InlineKeyboardButton(
             text="🧺 Забронировать слот",
@@ -21,19 +23,21 @@ async def show_webapp_button(message: types.Message):
         )
     ]])
     await message.answer("Нажми кнопку ниже, чтобы выбрать время стирки 👇", reply_markup=kb)
+    logger.info("Кнопка отправлена")
 
-@register_command(router, "start", " Запустить бота")
+@router.message(CommandStart())
 async def cmd_start(message: types.Message, state: FSMContext):
     tg_id = message.from_user.id
-
     try:
         resp = await api_client.check_user_exists(tg_id)
+        logger.info(f"Ответ сервера для tg_id {tg_id}: {resp}")
         if resp.get("answer") is True:
             await show_webapp_button(message)
             await state.clear()
             return
     except Exception as e:
-        await message.answer(f"⚠️ Не удалось связаться с сервером. Попробуй позже.")
+        logger.error(f"Ошибка при check_user_exists: {type(e).__name__}: {e}", exc_info=True)
+        await message.answer("⚠️ Не удалось связаться с сервером. Попробуй позже.")
         return
 
     await message.answer(
@@ -45,11 +49,9 @@ async def cmd_start(message: types.Message, state: FSMContext):
 @router.message(RegistrationStates.waiting_for_email, F.text)
 async def process_email(message: types.Message, state: FSMContext):
     email = message.text.strip()
-
     if "@" not in email or "." not in email.split("@")[-1]:
         await message.answer("❌ Некорректный формат почты. Попробуй ещё раз:")
         return
-
     if not email.endswith("@edu.spbstu.ru"):
         await message.answer("❌ Используй только почту @edu.spbstu.ru")
         return
@@ -61,15 +63,15 @@ async def process_email(message: types.Message, state: FSMContext):
             surname=message.from_user.last_name or "",
             email=email
         )
-
         if resp.get("status") == "good":
             await message.answer("✅ Регистрация успешна! Добро пожаловать.")
+            # ➡️ ВОТ ЭТО ВАЖНО: вызываем кнопку WebApp
             await show_webapp_button(message)
-            await state.clear()  # ✅ КРИТИЧНО: выходим из состояния ожидания
+            await state.clear()
         else:
-            await message.answer(" Ошибка на сервере. Попробуй /start заново.")
-            await state.clear()  # Сбрасываем, чтобы не зависнуть в ожидании
-            
+            await message.answer("❌ Ошибка на сервере. Попробуй /start заново.")
+            await state.clear()
     except Exception as e:
+        logger.error(f"Ошибка регистрации: {e}", exc_info=True)
         await message.answer(f"⚠️ Ошибка при регистрации: {e}")
         await state.clear()
