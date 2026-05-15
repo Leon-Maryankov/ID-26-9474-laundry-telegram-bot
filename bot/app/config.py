@@ -1,7 +1,8 @@
-import os
 from dotenv import load_dotenv
+import os
 
-load_dotenv()
+load_dotenv('common.env')   # общие настройки
+load_dotenv()               # личные (переопределяют)
 
 class Settings:
     BOT_TOKEN = os.getenv("BOT_TOKEN")
