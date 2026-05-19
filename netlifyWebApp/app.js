@@ -452,7 +452,6 @@ function setupEventListeners() {
 }
 
 // Initialize Application
-// Замените initializeApp на эту версию
 async function initializeApp() {
     try {
         showScreen('loading');
@@ -460,26 +459,8 @@ async function initializeApp() {
         const telegramId = tg.initDataUnsafe.user?.id || 123456;
         console.log('Telegram ID:', telegramId);
         
-        // Добавляем ТАЙМАУТ 3 секунды
-        let existingUser = null;
-        let apiError = null;
+        const existingUser = await checkUserExists(telegramId);
         
-        try {
-            const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('API timeout')), 3000)
-            );
-            
-            existingUser = await Promise.race([
-                checkUserExists(telegramId),
-                timeoutPromise
-            ]);
-        } catch (err) {
-            apiError = err;
-            console.error('API call failed:', err);
-            existingUser = null;
-        }
-        
-        // ВАЖНО: ВСЕГДА показываем какой-то экран
         if (existingUser) {
             appState.user = existingUser;
             appState.isRegistered = true;
@@ -488,19 +469,14 @@ async function initializeApp() {
             setupEventListeners();
             await loadAllData();
         } else {
-            // Показываем регистрацию при любой ошибке или отсутствии пользователя
-            if (apiError) {
-                showToast('error', 'Сервер не отвечает. Пожалуйста, проверьте подключение.');
-            }
             showScreen('registration');
             setupEventListeners();
         }
     } catch (error) {
         console.error('Initialization error:', error);
-        // КРИТИЧЕСКИ ВАЖНО: в случае ошибки ВСЕГДА показываем регистрацию
+        showToast('error', 'Ошибка инициализации приложения');
         showScreen('registration');
         setupEventListeners();
-        showToast('error', 'Ошибка инициализации. Попробуйте позже.');
     }
 }
 
