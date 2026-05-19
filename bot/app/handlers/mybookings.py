@@ -33,4 +33,36 @@ async def cmd_mybookings(message: Message, state: FSMContext):
         await message.answer(f"⚠️ Не удалось связаться с сервером. Попробуй позже.")
         return
 
-    await message.answer("Ваши брони: (заглушка)")
+    user = resp.get("user") or {}
+    user_id = user.get("id")
+    if not user_id:
+        await message.answer("⚠️ Не удалось получить идентификатор пользователя.")
+        return
+
+    try:
+        bookings_resp = await api_client.get_bookings(user_id)
+    except Exception:
+        await message.answer("⚠️ Не удалось получить брони с сервера. Попробуй позже.")
+        return
+
+    if bookings_resp.get("answer") is False:
+        await message.answer("⚠️ Сервер вернул ошибку при получении броней.")
+        return
+
+    slots = bookings_resp.get("slots", []) or []
+    if len(slots) == 0:
+        await message.answer("У вас нет активных броней.")
+        return
+
+    lines = []
+    for s in slots:
+        # handle different JSON key casings
+        date = s.get("Date") or s.get("date") or ""
+        if "T" in date:
+            date = date.replace("T", " ").split("+")[0].split("Z")[0]
+        mid = s.get("MachineId") or s.get("machineId") or "?"
+        mtype = s.get("MachineType") or s.get("machineType") or "?"
+        slot_id = s.get("Id") or s.get("id") or "?"
+        lines.append(f"- {date} | Машина {mid} ({mtype}) | id:{slot_id}")
+
+    await message.answer("Ваши брони:\n" + "\n".join(lines))

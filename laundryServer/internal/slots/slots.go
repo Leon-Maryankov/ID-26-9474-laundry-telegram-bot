@@ -13,6 +13,7 @@ type Slots struct {
 }
 
 type MachineType int
+
 const (
 	Washing MachineType = iota
 	Dryer
@@ -48,21 +49,22 @@ func (machineType MachineType) MarshalJSON() ([]byte, error) {
 
 const (
 	amountOfWashingMachines = 3
-	amountOfDryerMachines = 1
+	amountOfDryerMachines   = 1
 )
 
 const (
 	beginHour = 6
-	endHour = 23
+	endHour   = 23
 )
-var excludedHours = []int{ 16 }
+
+var excludedHours = []int{16}
 
 type Slot struct {
-	Id int
-	Date time.Time
-	MachineId int
+	Id          int
+	Date        time.Time
+	MachineId   int
 	MachineType MachineType
-	UserId int `json:"-"`
+	UserId      int `json:"-"`
 }
 
 func NewSlots(database *sql.DB) (*Slots, error) {
@@ -148,8 +150,8 @@ func (slots *Slots) generateSlots(start time.Time) error {
 
 			for washingMachineId := range amountOfWashingMachines {
 				err := slots.addEmptySlot(&Slot{
-					Date: date,
-					MachineId: washingMachineId,
+					Date:        date,
+					MachineId:   washingMachineId,
 					MachineType: Washing,
 				})
 				if err != nil {
@@ -159,8 +161,8 @@ func (slots *Slots) generateSlots(start time.Time) error {
 
 			for dryerMachineId := range amountOfDryerMachines {
 				err := slots.addEmptySlot(&Slot{
-					Date: date,
-					MachineId: dryerMachineId,
+					Date:        date,
+					MachineId:   dryerMachineId,
 					MachineType: Dryer,
 				})
 				if err != nil {
@@ -188,9 +190,9 @@ func (slots *Slots) GetAvailableSlots() ([]Slot, error) {
 	result := []Slot{}
 	for rows.Next() {
 		var (
-			id int
-			date int64
-			machineId int
+			id          int
+			date        int64
+			machineId   int
 			machineType string
 		)
 
@@ -205,9 +207,9 @@ func (slots *Slots) GetAvailableSlots() ([]Slot, error) {
 		}
 
 		slot := Slot{
-			Id: id,
-			Date: time.Unix(date, 0),
-			MachineId: machineId,
+			Id:          id,
+			Date:        time.Unix(date, 0),
+			MachineId:   machineId,
 			MachineType: FromString(machineType),
 		}
 
@@ -222,10 +224,10 @@ func (slots *Slots) GetAvailableSlots() ([]Slot, error) {
 }
 
 var (
-	SlotNotFound = fmt.Errorf("slots.OccupySlots: slot not found")
+	SlotNotFound        = fmt.Errorf("slots.OccupySlots: slot not found")
 	SlotAlreadyOccupied = fmt.Errorf("slots.OccupySlots: slot already occupied")
-	WashingLimit = fmt.Errorf("slots.OccupySlots: washing machine limit exceeded")
-	DryerLimit = fmt.Errorf("slots.OccupySlots: dryer limit exceeded")
+	WashingLimit        = fmt.Errorf("slots.OccupySlots: washing machine limit exceeded")
+	DryerLimit          = fmt.Errorf("slots.OccupySlots: dryer limit exceeded")
 )
 
 func (slots *Slots) OccupySlot(slotId int, userId int) error {
@@ -403,10 +405,10 @@ func (slots *Slots) GetSlotsAttachedToUser(id int) ([]Slot, error) {
 
 	for rows.Next() {
 		var (
-			slot Slot
-			timestamp int64
+			slot        Slot
+			timestamp   int64
 			machineType string
-			userId sql.NullInt64
+			userId      sql.NullInt64
 		)
 
 		err := rows.Scan(

@@ -28,6 +28,8 @@ async def show_webapp_button(message: types.Message):
 @router.message(CommandStart())
 async def cmd_start(message: types.Message, state: FSMContext):
     tg_id = message.from_user.id
+
+
     try:
         resp = await api_client.check_user_exists(tg_id)
         logger.info(f"Ответ сервера для tg_id {tg_id}: {resp}")

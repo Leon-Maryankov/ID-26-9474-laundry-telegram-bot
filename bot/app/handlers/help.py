@@ -5,6 +5,7 @@ from aiogram import Bot
 
 router = Router()
 
+
 @router.message(Command("help"))
 async def cmd_help(message: Message, bot: Bot):
     bot_commands = await bot.get_my_commands()
