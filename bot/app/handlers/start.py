@@ -13,6 +13,8 @@ logger = logging.getLogger(__name__)
 class RegistrationStates(StatesGroup):
     waiting_for_email = State()
 
+
+
 async def show_webapp_button(message: types.Message):
     """Отправляет кнопку для открытия WebApp"""
     logger.info(f"Отправляем кнопку с URL: {settings.WEBAPP_URL}")
@@ -28,6 +30,12 @@ async def show_webapp_button(message: types.Message):
 @router.message(CommandStart())
 async def cmd_start(message: types.Message, state: FSMContext):
     tg_id = message.from_user.id
+
+    # Send intro message to every user on /start
+    try:
+        await message.answer(INTRO_TEXT)
+    except Exception:
+        logger.exception("Failed to send intro message")
     try:
         resp = await api_client.check_user_exists(tg_id)
         logger.info(f"Ответ сервера для tg_id {tg_id}: {resp}")

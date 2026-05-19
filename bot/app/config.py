@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 import os
 
-load_dotenv('common.env')   # общие настройки
+#load_dotenv('common.env')   # общие настройки
 load_dotenv()               # личные (переопределяют)
 
 class Settings:

@@ -27,4 +27,15 @@ class APIClient:
 
     # Другие методы: get_slots, book, cancel, get_bookings
 
+    async def get_bookings(self, user_id: int):
+        """Get bookings (slots) attached to a user by internal user id.
+
+        Calls POST {base}/{token}/getSlotsAttachedToUser with JSON {"userId": user_id}.
+        Returns parsed JSON response from the server.
+        """
+        async with aiohttp.ClientSession() as session:
+            url = f"{self.base_url}/{self.api_token}/getSlotsAttachedToUser"
+            async with session.post(url, json={"userId": user_id}) as resp:
+                return await resp.json()
+
 api_client = APIClient()
