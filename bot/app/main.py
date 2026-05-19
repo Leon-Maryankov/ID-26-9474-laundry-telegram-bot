@@ -5,9 +5,10 @@ from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.enums import ParseMode
 from app.config import settings
-from app.handlers import start, help, mybookings
+from app.handlers import start, help, mybookings, booking
 from app.commands_setup import setup_bot_commands
 from app.services.api_client import api_client
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -41,6 +42,7 @@ async def main():
     dp.include_router(start.router)
     dp.include_router(help.router)
     dp.include_router(mybookings.router)
+    dp.include_router(booking.router)
 
     await bot.delete_webhook(drop_pending_updates=True)
     logger.info("Бот запущен и ждёт команды...")

@@ -38,4 +38,33 @@ class APIClient:
             async with session.post(url, json={"userId": user_id}) as resp:
                 return await resp.json()
 
+    async def get_available_slots(self):
+        """Get available free slots from the server."""
+        async with aiohttp.ClientSession() as session:
+            url = f"{self.base_url}/{self.api_token}/getAvailableSlots"
+            async with session.post(url, json={}) as resp:
+                return await resp.json()
+
+    async def occupy_slot(self, slot_id: int, user_id: int):
+        """Occupy a slot for a user.
+
+        Calls POST {base}/{token}/occupySlot with JSON {"slotId": slot_id, "userId": user_id}.
+        Returns parsed JSON response from the server.
+        """
+        async with aiohttp.ClientSession() as session:
+            url = f"{self.base_url}/{self.api_token}/occupySlot"
+            async with session.post(url, json={"slotId": slot_id, "userId": user_id}) as resp:
+                return await resp.json()
+
+    async def cancel_slot(self, slot_id: int, user_id: int):
+        """Cancel a booked slot for a user.
+
+        Calls POST {base}/{token}/cancelSlot with JSON {"slotId": slot_id, "userId": user_id}.
+        Returns parsed JSON response from the server.
+        """
+        async with aiohttp.ClientSession() as session:
+            url = f"{self.base_url}/{self.api_token}/cancelSlot"
+            async with session.post(url, json={"slotId": slot_id, "userId": user_id}) as resp:
+                return await resp.json()
+
 api_client = APIClient()
