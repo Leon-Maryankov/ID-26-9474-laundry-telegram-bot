@@ -72,8 +72,6 @@ python -m http.server 8000
 Тогда в .env укажите WEBAPP_URL=http://localhost:8000 (но учтите, что Telegram не примет HTTP-ссылку). Для тестирования через браузер или внутри Telegram лучше использовать публичный HTTPS (Netlify/ngrok).
 
 ### 5. Деплой WebApp на Netlify
-- Замените содержимое папки netlifyWebApp вашими файлами (index.html, style.css, app.js).
-- Запушьте изменения на GitHub.
 - Авторизуйтесь на Netlify, выберите репозиторий и настройте публикацию:
 - Base directory – оставьте пустым
 - Build command – пусто
