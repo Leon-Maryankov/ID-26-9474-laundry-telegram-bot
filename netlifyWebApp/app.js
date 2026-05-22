@@ -108,45 +108,8 @@ async function apiCall(endpoint, method = 'GET', data = null) {
     }
 }
 
-async function checkUserExists(telegramId) {
-    try {
-        const response = await apiCall('/doesUserExist', 'POST', {
-            telegramId: telegramId
-        });
-        
-        if (response.status === 'good' && response.answer) {
-            return response.user;
-        }
-        return null;
-    } catch (error) {
-        console.error('Error checking user:', error);
-        return null;
-    }
-}
 
-async function registerUser(name, surname, email) {
-    try {
-        const telegramId = tg.initDataUnsafe.user?.id || 123456;
-        const response = await apiCall('/registerUser', 'POST', {
-            telegramId: telegramId,
-            name: name,
-            surname: surname,
-            email: email
-        });
-        
-        if (response.status === 'good') {
-            showToast('success', 'Успешная регистрация!');
-            return { id: telegramId, name, surname, email };
-        } else {
-            showToast('error', 'Ошибка регистрации');
-            return null;
-        }
-    } catch (error) {
-        console.error('Error registering user:', error);
-        showToast('error', 'Ошибка при регистрации');
-        return null;
-    }
-}
+
 
 async function getAvailableSlots() {
     try {
@@ -413,35 +376,6 @@ function setupEventListeners() {
         }
     });
     
-    // Registration form
-    forms.registration.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const name = document.getElementById('nameInput').value.trim();
-        const surname = document.getElementById('surnameInput').value.trim();
-        const email = document.getElementById('emailInput').value.trim();
-        
-        if (!name || !surname || !email) {
-            showToast('error', 'Пожалуйста, заполните все поля');
-            return;
-        }
-        
-        const submitBtn = forms.registration.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Регистрация...';
-        
-        const user = await registerUser(name, surname, email);
-        if (user) {
-            appState.user = user;
-            appState.isRegistered = true;
-            document.getElementById('userName').textContent = `${user.name} ${user.surname}`;
-            showScreen('main');
-            await loadAllData();
-        }
-        
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Зарегистрироваться';
-    });
     
     // Toast close buttons
     document.querySelectorAll('.toast-close').forEach(btn => {
@@ -455,28 +389,30 @@ function setupEventListeners() {
 async function initializeApp() {
     try {
         showScreen('loading');
-        
-        const telegramId = tg.initDataUnsafe.user?.id || 123456;
-        console.log('Telegram ID:', telegramId);
-        
-        const existingUser = await checkUserExists(telegramId);
-        
-        if (existingUser) {
-            appState.user = existingUser;
-            appState.isRegistered = true;
-            document.getElementById('userName').textContent = `${existingUser.name} ${existingUser.surname}`;
-            showScreen('main');
-            setupEventListeners();
-            await loadAllData();
-        } else {
-            showScreen('registration');
-            setupEventListeners();
-        }
+
+        const telegramUser = tg.initDataUnsafe.user;
+
+        appState.user = {
+            id: telegramUser?.id || 123456,
+            name: telegramUser?.first_name || 'Telegram',
+            surname: telegramUser?.last_name || 'User',
+            email: 'example@example.com'
+        };
+
+        appState.isRegistered = true;
+
+        document.getElementById('userName').textContent =
+            `${appState.user.name} ${appState.user.surname}`;
+
+        showScreen('main');
+
+        setupEventListeners();
+
+        await loadAllData();
+
     } catch (error) {
         console.error('Initialization error:', error);
         showToast('error', 'Ошибка инициализации приложения');
-        showScreen('registration');
-        setupEventListeners();
     }
 }
 
