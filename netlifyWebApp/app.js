@@ -4,7 +4,7 @@ tg.expand();
 
 // API Configuration
 const API_TOKEN = 'token';
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'http://localhost:8080'; // При необходимости замените на https://ваш-сервер (ngrok)
 
 // Application State
 let appState = {
@@ -60,7 +60,6 @@ function showToast(type, message) {
 
 // Универсальная функция форматирования даты
 function formatDateTime(timestamp) {
-    // Если timestamp – число (Unix timestamp в секундах)
     let ts = typeof timestamp === 'number' ? timestamp : Number(timestamp);
     if (!isNaN(ts) && ts > 0) {
         const date = new Date(ts * 1000);
@@ -68,7 +67,6 @@ function formatDateTime(timestamp) {
             return formatDateFromDate(date);
         }
     }
-    // Если timestamp – строка ISO
     const date = new Date(timestamp);
     if (!isNaN(date.getTime())) {
         return formatDateFromDate(date);
@@ -105,14 +103,10 @@ async function apiCall(endpoint, method = 'GET', data = null) {
             'Content-Type': 'application/json'
         }
     };
-    if (data) {
-        options.body = JSON.stringify(data);
-    }
+    if (data) options.body = JSON.stringify(data);
     try {
         const response = await fetch(url, options);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         return await response.json();
     } catch (error) {
         console.error('API call failed:', error);
@@ -123,10 +117,8 @@ async function apiCall(endpoint, method = 'GET', data = null) {
 
 async function checkUserExists(telegramId) {
     try {
-        const response = await apiCall('/doesUserExist', 'POST', { telegramId: telegramId });
-        if (response.status === 'good' && response.answer) {
-            return response.user;
-        }
+        const response = await apiCall('/doesUserExist', 'POST', { telegramId });
+        if (response.status === 'good' && response.answer) return response.user;
         return null;
     } catch (error) {
         console.error('Error checking user:', error);
@@ -136,16 +128,12 @@ async function checkUserExists(telegramId) {
 
 async function registerUser(name, surname, email) {
     try {
-        const telegramId = tg.initDataUnsafe.user?.id;
-        if (!telegramId) {
-            showToast('error', 'Не удалось определить Telegram ID');
-            return null;
-        }
+        const telegramId = tg.initDataUnsafe.user?.id || 123456;
         const response = await apiCall('/registerUser', 'POST', {
-            telegramId: telegramId,
-            name: name,
-            surname: surname,
-            email: email
+            telegramId,
+            name,
+            surname,
+            email
         });
         if (response.status === 'good') {
             showToast('success', 'Успешная регистрация!');
@@ -164,9 +152,7 @@ async function registerUser(name, surname, email) {
 async function getAvailableSlots() {
     try {
         const response = await apiCall('/getAvailableSlots', 'POST', {});
-        if (response.status === 'good') {
-            return response.Slots || [];
-        }
+        if (response.status === 'good') return response.Slots || [];
         return [];
     } catch (error) {
         console.error('Error fetching available slots:', error);
@@ -176,10 +162,8 @@ async function getAvailableSlots() {
 
 async function getBookedSlots(userId) {
     try {
-        const response = await apiCall('/getSlotsAttachedToUser', 'POST', { userId: userId });
-        if (response.status === 'good') {
-            return response.slots || [];
-        }
+        const response = await apiCall('/getSlotsAttachedToUser', 'POST', { userId });
+        if (response.status === 'good') return response.slots || [];
         return [];
     } catch (error) {
         console.error('Error fetching booked slots:', error);
@@ -191,7 +175,7 @@ async function bookSlot(slotId) {
     if (!appState.user) return false;
     try {
         const response = await apiCall('/occupySlot', 'POST', {
-            slotId: slotId,
+            slotId,
             userId: appState.user.id
         });
         if (response.status === 'good') {
@@ -217,7 +201,7 @@ async function cancelSlot(slotId) {
     if (!appState.user) return false;
     try {
         const response = await apiCall('/cancelSlot', 'POST', {
-            slotId: slotId,
+            slotId,
             userId: appState.user.id
         });
         if (response.status === 'good') {
@@ -234,14 +218,12 @@ async function cancelSlot(slotId) {
     }
 }
 
-// UI Rendering Functions
+// UI Rendering
 function renderAvailableSlots(slots) {
     const machineTypeFilter = document.getElementById('machineTypeFilter').value;
     const dateFilter = document.getElementById('dateFilter').value;
     let filteredSlots = slots;
-    if (machineTypeFilter) {
-        filteredSlots = filteredSlots.filter(s => s.MachineType === machineTypeFilter);
-    }
+    if (machineTypeFilter) filteredSlots = filteredSlots.filter(s => s.MachineType === machineTypeFilter);
     if (dateFilter) {
         const filterDate = new Date(dateFilter);
         filteredSlots = filteredSlots.filter(s => {
@@ -256,16 +238,12 @@ function renderAvailableSlots(slots) {
     const groupedByDate = {};
     filteredSlots.forEach(slot => {
         const dateStr = formatDateTime(slot.Date).split(' ').slice(0, 3).join(' ');
-        if (!groupedByDate[dateStr]) {
-            groupedByDate[dateStr] = [];
-        }
+        if (!groupedByDate[dateStr]) groupedByDate[dateStr] = [];
         groupedByDate[dateStr].push(slot);
     });
     let html = '';
     Object.entries(groupedByDate).forEach(([dateStr, daySlots]) => {
-        html += `<div class="slots-group">
-            <h3 class="slots-group-title">${dateStr}</h3>
-            <div class="slots-grid">`;
+        html += `<div class="slots-group"><h3 class="slots-group-title">${dateStr}</h3><div class="slots-grid">`;
         daySlots.forEach(slot => {
             const time = formatDateTime(slot.Date);
             const machineLabel = getMachineTypeLabel(slot.MachineType);
@@ -281,7 +259,7 @@ function renderAvailableSlots(slots) {
                 </button>
             </div>`;
         });
-        html += '</div></div>';
+        html += `</div></div>`;
     });
     lists.available.innerHTML = html;
     document.querySelectorAll('.slot-book-btn').forEach(btn => {
@@ -290,9 +268,7 @@ function renderAvailableSlots(slots) {
             btn.disabled = true;
             btn.textContent = 'Обработка...';
             const success = await bookSlot(slotId);
-            if (success) {
-                await loadAllData();
-            }
+            if (success) await loadAllData();
             btn.disabled = false;
             btn.textContent = 'Забронировать';
         });
@@ -330,9 +306,7 @@ function renderBookedSlots(slots) {
             btn.disabled = true;
             btn.textContent = 'Отмена...';
             const success = await cancelSlot(slotId);
-            if (success) {
-                await loadAllData();
-            }
+            if (success) await loadAllData();
             btn.disabled = false;
             btn.textContent = 'Отменить';
         });
@@ -351,7 +325,7 @@ async function loadAllData() {
     }
 }
 
-// Event Listeners Setup
+// Event Listeners
 function setupEventListeners() {
     document.querySelectorAll('.tab-button').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -363,26 +337,16 @@ function setupEventListeners() {
             document.getElementById(`${tab}Tab`).classList.add('tab-active');
         });
     });
-    document.getElementById('machineTypeFilter').addEventListener('change', () => {
-        renderAvailableSlots(appState.slots.available);
-    });
-    document.getElementById('dateFilter').addEventListener('change', () => {
-        renderAvailableSlots(appState.slots.available);
-    });
+    document.getElementById('machineTypeFilter').addEventListener('change', () => renderAvailableSlots(appState.slots.available));
+    document.getElementById('dateFilter').addEventListener('change', () => renderAvailableSlots(appState.slots.available));
     document.getElementById('profileBtn').addEventListener('click', () => {
         document.getElementById('profileName').textContent = appState.user.name;
         document.getElementById('profileSurname').textContent = appState.user.surname;
         document.getElementById('profileEmail').textContent = appState.user.email;
         modals.profile.classList.add('visible');
     });
-    document.querySelector('.modal-close').addEventListener('click', () => {
-        modals.profile.classList.remove('visible');
-    });
-    modals.profile.addEventListener('click', (e) => {
-        if (e.target === modals.profile) {
-            modals.profile.classList.remove('visible');
-        }
-    });
+    document.querySelector('.modal-close').addEventListener('click', () => modals.profile.classList.remove('visible'));
+    modals.profile.addEventListener('click', (e) => { if (e.target === modals.profile) modals.profile.classList.remove('visible'); });
     forms.registration.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('nameInput').value.trim();
@@ -407,22 +371,16 @@ function setupEventListeners() {
         submitBtn.textContent = 'Зарегистрироваться';
     });
     document.querySelectorAll('.toast-close').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.target.closest('.toast').classList.remove('visible');
-        });
+        btn.addEventListener('click', (e) => e.target.closest('.toast').classList.remove('visible'));
     });
 }
 
-// Initialize Application
+// Initialization
 async function initializeApp() {
     try {
         showScreen('loading');
-        const telegramId = tg.initDataUnsafe.user?.id;
-        if (!telegramId) {
-            showToast('error', 'Не удалось получить данные пользователя из Telegram');
-            showScreen('registration');
-            return;
-        }
+        const telegramId = tg.initDataUnsafe.user?.id || 123456;
+        console.log('Telegram ID:', telegramId);
         const existingUser = await checkUserExists(telegramId);
         if (existingUser) {
             appState.user = existingUser;
