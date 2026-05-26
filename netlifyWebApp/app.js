@@ -53,23 +53,38 @@ function showToast(type, message) {
     const messageElement = document.getElementById(`${type}ToastMessage`);
     messageElement.textContent = message;
     toast.classList.add('visible');
-    
     setTimeout(() => {
         toast.classList.remove('visible');
     }, 3000);
 }
 
+// Универсальная функция форматирования даты
 function formatDateTime(timestamp) {
-    const date = new Date(timestamp * 1000);
+    // Если timestamp – число (Unix timestamp в секундах)
+    let ts = typeof timestamp === 'number' ? timestamp : Number(timestamp);
+    if (!isNaN(ts) && ts > 0) {
+        const date = new Date(ts * 1000);
+        if (!isNaN(date.getTime())) {
+            return formatDateFromDate(date);
+        }
+    }
+    // Если timestamp – строка ISO
+    const date = new Date(timestamp);
+    if (!isNaN(date.getTime())) {
+        return formatDateFromDate(date);
+    }
+    console.error('Invalid timestamp:', timestamp);
+    return 'Неверная дата';
+}
+
+function formatDateFromDate(date) {
     const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
     const months = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-    
     const dayOfWeek = days[date.getDay()];
     const day = date.getDate();
     const month = months[date.getMonth()];
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
-    
     return `${dayOfWeek}, ${day} ${month} ${hours}:${minutes}`;
 }
 
@@ -90,11 +105,9 @@ async function apiCall(endpoint, method = 'GET', data = null) {
             'Content-Type': 'application/json'
         }
     };
-    
     if (data) {
         options.body = JSON.stringify(data);
     }
-    
     try {
         const response = await fetch(url, options);
         if (!response.ok) {
@@ -108,13 +121,49 @@ async function apiCall(endpoint, method = 'GET', data = null) {
     }
 }
 
+async function checkUserExists(telegramId) {
+    try {
+        const response = await apiCall('/doesUserExist', 'POST', { telegramId: telegramId });
+        if (response.status === 'good' && response.answer) {
+            return response.user;
+        }
+        return null;
+    } catch (error) {
+        console.error('Error checking user:', error);
+        return null;
+    }
+}
 
-
+async function registerUser(name, surname, email) {
+    try {
+        const telegramId = tg.initDataUnsafe.user?.id;
+        if (!telegramId) {
+            showToast('error', 'Не удалось определить Telegram ID');
+            return null;
+        }
+        const response = await apiCall('/registerUser', 'POST', {
+            telegramId: telegramId,
+            name: name,
+            surname: surname,
+            email: email
+        });
+        if (response.status === 'good') {
+            showToast('success', 'Успешная регистрация!');
+            return { id: telegramId, name, surname, email };
+        } else {
+            showToast('error', 'Ошибка регистрации');
+            return null;
+        }
+    } catch (error) {
+        console.error('Error registering user:', error);
+        showToast('error', 'Ошибка при регистрации');
+        return null;
+    }
+}
 
 async function getAvailableSlots() {
     try {
         const response = await apiCall('/getAvailableSlots', 'POST', {});
-        
         if (response.status === 'good') {
             return response.Slots || [];
         }
@@ -127,10 +176,7 @@ async function getAvailableSlots() {
 
 async function getBookedSlots(userId) {
     try {
-        const response = await apiCall('/getSlotsAttachedToUser', 'POST', {
-            userId: userId
-        });
-        
+        const response = await apiCall('/getSlotsAttachedToUser', 'POST', { userId: userId });
         if (response.status === 'good') {
             return response.slots || [];
         }
@@ -143,13 +189,11 @@ async function getBookedSlots(userId) {
 
 async function bookSlot(slotId) {
     if (!appState.user) return false;
-    
     try {
         const response = await apiCall('/occupySlot', 'POST', {
             slotId: slotId,
             userId: appState.user.id
         });
-        
         if (response.status === 'good') {
             showToast('success', 'Слот успешно забронирован!');
             return true;
@@ -171,13 +215,11 @@ async function bookSlot(slotId) {
 
 async function cancelSlot(slotId) {
     if (!appState.user) return false;
-    
     try {
         const response = await apiCall('/cancelSlot', 'POST', {
             slotId: slotId,
             userId: appState.user.id
         });
-        
         if (response.status === 'good') {
             showToast('success', 'Бронирование отменено');
             return true;
@@ -196,13 +238,10 @@ async function cancelSlot(slotId) {
 function renderAvailableSlots(slots) {
     const machineTypeFilter = document.getElementById('machineTypeFilter').value;
     const dateFilter = document.getElementById('dateFilter').value;
-    
     let filteredSlots = slots;
-    
     if (machineTypeFilter) {
         filteredSlots = filteredSlots.filter(s => s.MachineType === machineTypeFilter);
     }
-    
     if (dateFilter) {
         const filterDate = new Date(dateFilter);
         filteredSlots = filteredSlots.filter(s => {
@@ -210,12 +249,10 @@ function renderAvailableSlots(slots) {
             return slotDate.toDateString() === filterDate.toDateString();
         });
     }
-    
     if (filteredSlots.length === 0) {
         lists.available.innerHTML = '<div class="empty-message"><p>😴 Нет доступных слотов с такими фильтрами</p></div>';
         return;
     }
-    
     const groupedByDate = {};
     filteredSlots.forEach(slot => {
         const dateStr = formatDateTime(slot.Date).split(' ').slice(0, 3).join(' ');
@@ -224,18 +261,15 @@ function renderAvailableSlots(slots) {
         }
         groupedByDate[dateStr].push(slot);
     });
-    
     let html = '';
     Object.entries(groupedByDate).forEach(([dateStr, daySlots]) => {
         html += `<div class="slots-group">
             <h3 class="slots-group-title">${dateStr}</h3>
             <div class="slots-grid">`;
-        
         daySlots.forEach(slot => {
-            const time = new Date(slot.Date * 1000).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            const time = formatDateTime(slot.Date);
             const machineLabel = getMachineTypeLabel(slot.MachineType);
             const color = getMachineTypeColor(slot.MachineType);
-            
             html += `<div class="slot-card available">
                 <div class="slot-time">${time}</div>
                 <div class="slot-type" style="border-left: 4px solid ${color}">
@@ -247,19 +281,14 @@ function renderAvailableSlots(slots) {
                 </button>
             </div>`;
         });
-        
         html += '</div></div>';
     });
-    
     lists.available.innerHTML = html;
-    
-    // Add event listeners
     document.querySelectorAll('.slot-book-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const slotId = parseInt(e.target.dataset.slotId);
             btn.disabled = true;
             btn.textContent = 'Обработка...';
-            
             const success = await bookSlot(slotId);
             if (success) {
                 await loadAllData();
@@ -275,9 +304,7 @@ function renderBookedSlots(slots) {
         lists.booked.innerHTML = '<div class="empty-message"><p>📭 У вас нет активных бронирований</p></div>';
         return;
     }
-    
     const sortedSlots = slots.sort((a, b) => a.Date - b.Date);
-    
     let html = '';
     sortedSlots.forEach(slot => {
         const time = formatDateTime(slot.Date);
@@ -285,7 +312,6 @@ function renderBookedSlots(slots) {
         const color = getMachineTypeColor(slot.MachineType);
         const now = Date.now() / 1000;
         const isPast = slot.Date < now;
-        
         html += `<div class="slot-card booked ${isPast ? 'past' : ''}">
             <div class="slot-time">${time}</div>
             <div class="slot-type" style="border-left: 4px solid ${color}">
@@ -297,16 +323,12 @@ function renderBookedSlots(slots) {
             </button>` : '<div class="slot-status-past">Завершено</div>'}
         </div>`;
     });
-    
     lists.booked.innerHTML = html;
-    
-    // Add event listeners
     document.querySelectorAll('.slot-cancel-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const slotId = parseInt(e.target.dataset.slotId);
             btn.disabled = true;
             btn.textContent = 'Отмена...';
-            
             const success = await cancelSlot(slotId);
             if (success) {
                 await loadAllData();
@@ -322,7 +344,6 @@ async function loadAllData() {
     try {
         appState.slots.available = await getAvailableSlots();
         appState.slots.booked = await getBookedSlots(appState.user.id);
-        
         renderAvailableSlots(appState.slots.available);
         renderBookedSlots(appState.slots.booked);
     } catch (error) {
@@ -332,52 +353,59 @@ async function loadAllData() {
 
 // Event Listeners Setup
 function setupEventListeners() {
-    // Tab switching
     document.querySelectorAll('.tab-button').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const tab = e.currentTarget.dataset.tab;
             appState.currentTab = tab;
-            
-            // Update active button
             document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('tab-active'));
             e.currentTarget.classList.add('tab-active');
-            
-            // Update active content
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('tab-active'));
             document.getElementById(`${tab}Tab`).classList.add('tab-active');
         });
     });
-    
-    // Filters
     document.getElementById('machineTypeFilter').addEventListener('change', () => {
         renderAvailableSlots(appState.slots.available);
     });
-    
     document.getElementById('dateFilter').addEventListener('change', () => {
         renderAvailableSlots(appState.slots.available);
     });
-    
-    // Profile button
     document.getElementById('profileBtn').addEventListener('click', () => {
         document.getElementById('profileName').textContent = appState.user.name;
         document.getElementById('profileSurname').textContent = appState.user.surname;
         document.getElementById('profileEmail').textContent = appState.user.email;
         modals.profile.classList.add('visible');
     });
-    
-    // Modal close
     document.querySelector('.modal-close').addEventListener('click', () => {
         modals.profile.classList.remove('visible');
     });
-    
     modals.profile.addEventListener('click', (e) => {
         if (e.target === modals.profile) {
             modals.profile.classList.remove('visible');
         }
     });
-    
-    
-    // Toast close buttons
+    forms.registration.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('nameInput').value.trim();
+        const surname = document.getElementById('surnameInput').value.trim();
+        const email = document.getElementById('emailInput').value.trim();
+        if (!name || !surname || !email) {
+            showToast('error', 'Пожалуйста, заполните все поля');
+            return;
+        }
+        const submitBtn = forms.registration.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Регистрация...';
+        const user = await registerUser(name, surname, email);
+        if (user) {
+            appState.user = user;
+            appState.isRegistered = true;
+            document.getElementById('userName').textContent = `${user.name} ${user.surname}`;
+            showScreen('main');
+            await loadAllData();
+        }
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Зарегистрироваться';
+    });
     document.querySelectorAll('.toast-close').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.target.closest('.toast').classList.remove('visible');
@@ -389,34 +417,32 @@ function setupEventListeners() {
 async function initializeApp() {
     try {
         showScreen('loading');
-
-        const telegramUser = tg.initDataUnsafe.user;
-
-        appState.user = {
-            id: telegramUser?.id || 123456,
-            name: telegramUser?.first_name || 'Telegram',
-            surname: telegramUser?.last_name || 'User',
-            email: 'example@example.com'
-        };
-
-        appState.isRegistered = true;
-
-        document.getElementById('userName').textContent =
-            `${appState.user.name} ${appState.user.surname}`;
-
-        showScreen('main');
-
-        setupEventListeners();
-
-        await loadAllData();
-
+        const telegramId = tg.initDataUnsafe.user?.id;
+        if (!telegramId) {
+            showToast('error', 'Не удалось получить данные пользователя из Telegram');
+            showScreen('registration');
+            return;
+        }
+        const existingUser = await checkUserExists(telegramId);
+        if (existingUser) {
+            appState.user = existingUser;
+            appState.isRegistered = true;
+            document.getElementById('userName').textContent = `${existingUser.name} ${existingUser.surname}`;
+            showScreen('main');
+            setupEventListeners();
+            await loadAllData();
+        } else {
+            showScreen('registration');
+            setupEventListeners();
+        }
     } catch (error) {
         console.error('Initialization error:', error);
         showToast('error', 'Ошибка инициализации приложения');
+        showScreen('registration');
+        setupEventListeners();
     }
 }
 
-// Start the application when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
